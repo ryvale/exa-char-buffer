@@ -1,5 +1,6 @@
 package com.exa.buffer;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -19,12 +20,36 @@ public class RBMappedFile extends ReadingBuffer {
 	public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 	public static final int DEFAULT_BUFFER_SIZE = 1024 * 1024;
 	
+	private static interface CharStreamCloser extends Closeable {
+		void close() throws IOException;
+	}
+	
+	private class RAFCloser implements CharStreamCloser {
+		private RandomAccessFile raf;
+		
+		private RAFCloser(RandomAccessFile raf) { this.raf = raf; }
+
+		public void close() throws IOException {
+			raf.close();
+		}
+	}
+	
+	private final static CharStreamCloser NOTHING_CLOSER = new CharStreamCloser() {
+
+		public void close() {
+			
+		}
+		
+	};
+	
 	protected ByteBuffer mbb;
 	private CharsetDecoder charsetDecoder;
 	private int offset;
 	protected CharBuffer buffer;
 	
-	public RBMappedFile(RandomAccessFile file, long start, int size, Charset charSet, int bufferSize, boolean autoDetectCharset) throws IOException {
+	private CharStreamCloser charStreamCloser;
+	
+	private void configStartSize(RandomAccessFile file, long start, int size, Charset charSet, int bufferSize, boolean autoDetectCharset, CharStreamCloser charStreamCloser) throws IOException {
 		if(start<0) throw new IllegalArgumentException();
 		if(size<0) throw new IllegalArgumentException();
 		if(start + size>file.length()) throw new IllegalArgumentException();
@@ -46,9 +71,10 @@ public class RBMappedFile extends ReadingBuffer {
 		
 		buffer = CharBuffer.allocate(bufferSize);
 		buffer.limit(0);
+		this.charStreamCloser = charStreamCloser;
 	}
 	
-	public RBMappedFile(RandomAccessFile file, long start, Charset charSet, int bufferSize, boolean autoDetectCharset) throws IOException {
+	public void configStart(RandomAccessFile file, long start, Charset charSet, int bufferSize, boolean autoDetectCharset, CharStreamCloser charStreamCloser) throws IOException {
 		if(start<0) throw new IllegalArgumentException();
 		int size = (int)(file.length() - start);
 		
@@ -64,48 +90,62 @@ public class RBMappedFile extends ReadingBuffer {
 		
 		size = (int)(file.length() - offset-1);
 		
-		//mbb.limit(size);
-		
 		charsetDecoder = charSet.newDecoder();
 		
 		buffer = CharBuffer.allocate(bufferSize);
 		buffer.limit(0);
+		
+		this.charStreamCloser = NOTHING_CLOSER;
 	}
 	
-	/*public RBMappedFile(RandomAccessFile file, Charset charSet, boolean autoDetectCharset) throws IOException {
-		
-	}*/
+	public RBMappedFile(RandomAccessFile file, long start, int size, Charset charSet, int bufferSize, boolean autoDetectCharset, CharStreamCloser charStreamCloser) throws IOException {
+		this.configStartSize(file, start, size, charSet, bufferSize, autoDetectCharset, charStreamCloser);
+	}
 	
+	public RBMappedFile(RandomAccessFile file, long start, Charset charSet, int bufferSize, boolean autoDetectCharset, CharStreamCloser charStreamCloser) throws IOException {
+		configStart(file, start, charSet, bufferSize, autoDetectCharset, charStreamCloser);
+	}
+		
 	public RBMappedFile(String fileName, long start, int size, Charset charSet, int bufferSize, boolean autoDetectCharset) throws IOException {
-		this(new RandomAccessFile(fileName, "rw"), start, size, charSet, bufferSize, autoDetectCharset);
+		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		this.configStartSize(raf, start, size, charSet, bufferSize, autoDetectCharset, new RAFCloser(raf));
 	}
 	
 	public RBMappedFile(String fileName, long start, Charset charSet, int bufferSize, boolean autoDetectCharset) throws IOException {
-		this(new RandomAccessFile(fileName, "rw"), start, charSet, bufferSize, autoDetectCharset);
+		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		this.configStart(raf, 0, charSet, bufferSize, autoDetectCharset, new RAFCloser(raf));
 	}
 	
 	public RBMappedFile(String fileName, Charset charSet, boolean autoDetectCharset) throws IOException {
-		this(new RandomAccessFile(fileName, "rw"), 0, charSet, DEFAULT_BUFFER_SIZE, autoDetectCharset);
+		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		this.configStart(raf, 0, charSet, DEFAULT_BUFFER_SIZE, autoDetectCharset, new RAFCloser(raf));
 	}
 	
 	public RBMappedFile(RandomAccessFile file, Charset charSet, boolean autoDetectCharset) throws IOException {
-		this(file, 0, charSet, DEFAULT_BUFFER_SIZE, autoDetectCharset);
+		this.configStart(file, 0, charSet, DEFAULT_BUFFER_SIZE, autoDetectCharset, NOTHING_CLOSER);
 	}
 	
 	public RBMappedFile(RandomAccessFile file, int start, Charset charSet, boolean autoDetectCharset) throws IOException {
-		this(file, start, charSet, DEFAULT_BUFFER_SIZE, autoDetectCharset);
+		
+		this.configStart(file, start, charSet, DEFAULT_BUFFER_SIZE, autoDetectCharset, NOTHING_CLOSER);
 	}
 	
 	public RBMappedFile(String fileName) throws IOException {
-		this(new RandomAccessFile(fileName, "rw"), 0, DEFAULT_CHARSET, DEFAULT_BUFFER_SIZE, false);
+		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		this.configStart(raf, 0, DEFAULT_CHARSET, DEFAULT_BUFFER_SIZE, false, new RAFCloser(raf));
+		//this(new RandomAccessFile(fileName, "rw"), 0, DEFAULT_CHARSET, DEFAULT_BUFFER_SIZE, false);
 	}
 	
 	public RBMappedFile(String fileName, boolean autoDetectCharset, int bufferSize) throws IOException {
-		this(new RandomAccessFile(fileName, "rw"), 0, DEFAULT_CHARSET, bufferSize, autoDetectCharset);
+		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		this.configStart(raf, 0, DEFAULT_CHARSET, bufferSize, autoDetectCharset, new RAFCloser(raf));
+		//this(new RandomAccessFile(fileName, "rw"), 0, DEFAULT_CHARSET, bufferSize, autoDetectCharset);
 	}
 	
 	public RBMappedFile(String fileName, boolean autoDetectCharset) throws IOException {
-		this(new RandomAccessFile(fileName, "rw"), 0, DEFAULT_CHARSET, DEFAULT_BUFFER_SIZE, autoDetectCharset);
+		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		this.configStart(raf, 0, DEFAULT_CHARSET, DEFAULT_BUFFER_SIZE, autoDetectCharset, new RAFCloser(raf));
+		//this(new RandomAccessFile(fileName, "rw"), 0, DEFAULT_CHARSET, DEFAULT_BUFFER_SIZE, autoDetectCharset);
 	}
 	
 	private RBMappedFile(ByteBuffer bb, CharsetDecoder charsetDecoder, CharBuffer buffer) {
@@ -116,6 +156,7 @@ public class RBMappedFile extends ReadingBuffer {
 		
 		this.charsetDecoder = charsetDecoder;
 		this.buffer = buffer;
+		this.charStreamCloser = NOTHING_CLOSER;
 	}
 	
 	@Override
@@ -198,8 +239,8 @@ public class RBMappedFile extends ReadingBuffer {
 	}
 
 	@Override
-	public void close() {
-		
+	public void close() throws IOException {
+		charStreamCloser.close();
 	}	
 	
 	public boolean back(String str, EscapeCharMan em) throws ParsingException {

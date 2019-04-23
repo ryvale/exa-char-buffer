@@ -1,11 +1,12 @@
 package com.exa.buffer;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import com.exa.chars.EscapeCharMan;
 import com.exa.lexing.ParsingException;
 
-public abstract class ReadingBuffer implements Cloneable {
+public abstract class ReadingBuffer implements Cloneable, Closeable {
 	public abstract Character nextChar();
 	public abstract boolean back(String str, EscapeCharMan em) throws ParsingException;
 	
@@ -33,7 +34,7 @@ public abstract class ReadingBuffer implements Cloneable {
 	@Override
 	public abstract ReadingBuffer clone();
 	
-	public void close() {}
+	public void close() throws IOException {}
 	
 	public RBRAM asRAMReadingBuffer() { return null; }
 	

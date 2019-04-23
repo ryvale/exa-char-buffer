@@ -1,5 +1,6 @@
 package com.exa.buffer;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
@@ -10,7 +11,7 @@ import com.exa.chars.EscapeCharMan;
 import com.exa.lexing.ParsingException;
 import com.exa.utils.ManagedException;
 
-public class CharReader implements Cloneable {
+public class CharReader implements Cloneable, Closeable {
 	public static abstract class ListeningBufferFactory {
 		public abstract ListeningBuffer create(CharReader charReader);
 	}
@@ -109,6 +110,8 @@ public class CharReader implements Cloneable {
 		}
 	}
 	
+	
+	
 	protected final ReadingBuffer readingBuffer;
 	//protected final StringBuilder analysisBuffer;
 	protected final List<CharReader> clones;
@@ -117,7 +120,7 @@ public class CharReader implements Cloneable {
 	protected EscapeCharMan escapeCharMan;
 	protected ListeningBufferFactory lbf;
 
-	public CharReader(ReadingBuffer readingBuffer, EscapeCharMan escapeCharMan, List<CharReader> clones/*, String analysisBuffer*, int position*/, ListeningBufferFactory lbf) {
+	public CharReader(ReadingBuffer readingBuffer, EscapeCharMan escapeCharMan, List<CharReader> clones, ListeningBufferFactory lbf) {
 		this.readingBuffer = readingBuffer;
 		this.clones = clones;
 		this.escapeCharMan = escapeCharMan;
@@ -135,6 +138,10 @@ public class CharReader implements Cloneable {
 	public CharReader(String str) {
 		this(new RBRAM(str), EscapeCharMan.NO_ESCAPE, new ArrayList<CharReader>(), LBF_CHAR_READER_POINTER);
 	}
+	
+	/*public static CharReader forFile(String fileName, boolean autoDetectCharset) {
+		return new CharReader(fileName, StandardCharsets.UTF_8, autoDetectCharset, EscapeCharMan.STANDARD);
+	}*/
 	
 	public Character nextChar() throws ParsingException {
 		Character currentChar;
