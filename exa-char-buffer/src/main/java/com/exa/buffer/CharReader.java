@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,9 +110,7 @@ public class CharReader implements Cloneable, Closeable {
 			return this;
 		}
 	}
-	
-	
-	
+		
 	protected final ReadingBuffer readingBuffer;
 	//protected final StringBuilder analysisBuffer;
 	protected final List<CharReader> clones;
@@ -139,9 +138,9 @@ public class CharReader implements Cloneable, Closeable {
 		this(new RBRAM(str), EscapeCharMan.NO_ESCAPE, new ArrayList<CharReader>(), LBF_CHAR_READER_POINTER);
 	}
 	
-	/*public static CharReader forFile(String fileName, boolean autoDetectCharset) {
-		return new CharReader(fileName, StandardCharsets.UTF_8, autoDetectCharset, EscapeCharMan.STANDARD);
-	}*/
+	public static CharReader forFile(String fileName, boolean autoDetectCharset) throws IOException {
+		return new CharReader(new RBMappedFile(fileName, StandardCharsets.UTF_8, autoDetectCharset), EscapeCharMan.STANDARD,  new ArrayList<CharReader>(), LBF_CHAR_READER_POINTER);
+	}
 	
 	public Character nextChar() throws ParsingException {
 		Character currentChar;
@@ -214,7 +213,7 @@ public class CharReader implements Cloneable, Closeable {
 	
 	public char charAt(int index) { return readingBuffer.charAt(index, escapeCharMan); }
 	
-	public void close() { }
+	public void close() throws IOException { readingBuffer.close(); }
 	
 	public Character nextWhileCharIn(String authorizedChars) throws ManagedException {
 		Character currentChar;
