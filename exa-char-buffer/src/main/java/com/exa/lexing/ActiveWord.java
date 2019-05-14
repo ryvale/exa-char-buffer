@@ -25,4 +25,6 @@ public class ActiveWord {
 	public void nextToEndOfWord(CharReader script) throws ParsingException {}
 	
 	public void nextToEndOfExpression(CharReader script) throws ManagedException {}
+	
+	public Character nextBeforeEnd(CharReader script) throws ManagedException { return null;}
 }

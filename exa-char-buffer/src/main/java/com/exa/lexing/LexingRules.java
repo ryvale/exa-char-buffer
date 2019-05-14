@@ -221,8 +221,12 @@ public class LexingRules {
 		ClientBuffer buffer;
 		
 		if(aw.isFirstCharManager()) {
+			StringBuilder sb = new StringBuilder();
+			
+			
+			
 			buffer = script.listen();
-			//db = script.monitorCharReading(true);
+			
 			aw.nextToEndOfWord(script);
 			return lastWrd = currentChar + buffer.release().toString(); //script.releaseCharReading(db);
 		}

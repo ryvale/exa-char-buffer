@@ -13,6 +13,10 @@ public class WordWithOpenCloseDelimiter extends WordSeparator {
 		this.closeDelimiter = closeDelimiter;
 	}
 	
+	public Character getCloseDelimiter() {
+		return closeDelimiter;
+	}
+
 	@Override
 	public void nextToEndOfWord(CharReader charReader) throws ParsingException {
 		charReader.nextToChar(closeDelimiter);
@@ -27,4 +31,17 @@ public class WordWithOpenCloseDelimiter extends WordSeparator {
 	public boolean isFirstCharManager() {
 		return true;
 	}
+
+	@Override
+	public Character nextBeforeEnd(CharReader script) throws ManagedException {
+		Character ch = script.nextChar();
+		if(ch == null) return null;
+		
+		if(ch == closeDelimiter) return null;
+		
+		return ch;
+	}
+	
+	
+	
 }
