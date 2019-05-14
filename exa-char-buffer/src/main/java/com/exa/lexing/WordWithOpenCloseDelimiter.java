@@ -33,7 +33,7 @@ public class WordWithOpenCloseDelimiter extends WordSeparator {
 	}
 
 	@Override
-	public Character nextBeforeEnd(CharReader script) throws ManagedException {
+	public Character nextBeforeEnd(CharReader script) throws ParsingException {
 		Character ch = script.nextChar();
 		if(ch == null) return null;
 		

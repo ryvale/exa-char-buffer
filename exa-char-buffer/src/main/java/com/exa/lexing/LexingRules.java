@@ -223,7 +223,8 @@ public class LexingRules {
 		if(aw.isFirstCharManager()) {
 			StringBuilder sb = new StringBuilder();
 			
-			
+			Character ch;
+			while((ch = aw.nextBeforeEnd(script)) != null) sb.append(ch);
 			
 			buffer = script.listen();
 			
