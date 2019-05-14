@@ -218,18 +218,22 @@ public class LexingRules {
 		
 		if(aw == null) return lastWrd = currentChar + nextWordStartingWithNonWS(script);
 		
-		ClientBuffer buffer;
-		
 		if(aw.isFirstCharManager()) {
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new StringBuilder(currentChar.toString());
 			
-			Character ch;
-			while((ch = aw.nextBeforeEnd(script)) != null) sb.append(ch);
+			CharProperty<Boolean> chPr;
+			do {
+				chPr = aw.nextUntilEnd(script);
+				if(chPr.getCharacter() == null) break;
+				
+				sb.append(chPr.getCharacter());
+			} while(chPr.getProperty());
 			
-			buffer = script.listen();
 			
-			aw.nextToEndOfWord(script);
-			return lastWrd = currentChar + buffer.release().toString(); //script.releaseCharReading(db);
+			//aw.nextToEndOfWord(script);
+			//return lastWrd = currentChar + buffer.release().toString(); //script.releaseCharReading(db);
+			
+			return lastWrd = sb.toString();
 		}
 		
 		if(aw.isWordSeparator()) {

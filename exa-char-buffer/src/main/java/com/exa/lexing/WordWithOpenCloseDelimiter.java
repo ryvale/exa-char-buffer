@@ -33,13 +33,11 @@ public class WordWithOpenCloseDelimiter extends WordSeparator {
 	}
 
 	@Override
-	public Character nextBeforeEnd(CharReader script) throws ParsingException {
+	public CharProperty<Boolean> nextUntilEnd(CharReader script) throws ParsingException {
 		Character ch = script.nextChar();
-		if(ch == null) return null;
+		if(ch == null || ch == closeDelimiter) return new CharProperty<Boolean>(ch, Boolean.FALSE);
 		
-		if(ch == closeDelimiter) return null;
-		
-		return ch;
+		return new CharProperty<>(ch, Boolean.TRUE);
 	}
 	
 	
