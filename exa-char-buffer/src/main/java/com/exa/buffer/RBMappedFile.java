@@ -28,10 +28,11 @@ public class RBMappedFile extends ReadingBuffer {
 		private RandomAccessFile raf;
 		
 		private RAFCloser(RandomAccessFile raf) { this.raf = raf; }
-
+		
 		public void close() throws IOException {
 			raf.close();
 		}
+		
 	}
 	
 	private final static CharStreamCloser NOTHING_CLOSER = new CharStreamCloser() {
@@ -81,6 +82,8 @@ public class RBMappedFile extends ReadingBuffer {
 		//this.file = file;
 		long sz = (size + 4 > file.length()) ? file.length() : size + 4;
 		
+		
+		//FileChannel channel = charStreamCloser
 		this.mbb = file.getChannel().map(MapMode.READ_ONLY, start, sz);
 		if(autoDetectCharset) 
 			charSet = ByteCharDecoder.charsetOf(mbb, charSet);
@@ -95,7 +98,9 @@ public class RBMappedFile extends ReadingBuffer {
 		buffer = CharBuffer.allocate(bufferSize);
 		buffer.limit(0);
 		
-		this.charStreamCloser = NOTHING_CLOSER;
+		
+		
+		this.charStreamCloser = charStreamCloser;
 	}
 	
 	public RBMappedFile(RandomAccessFile file, long start, int size, Charset charSet, int bufferSize, boolean autoDetectCharset, CharStreamCloser charStreamCloser) throws IOException {
@@ -107,17 +112,17 @@ public class RBMappedFile extends ReadingBuffer {
 	}
 		
 	public RBMappedFile(String fileName, long start, int size, Charset charSet, int bufferSize, boolean autoDetectCharset) throws IOException {
-		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		RandomAccessFile raf = new RandomAccessFile(fileName, "r");
 		this.configStartSize(raf, start, size, charSet, bufferSize, autoDetectCharset, new RAFCloser(raf));
 	}
 	
 	public RBMappedFile(String fileName, long start, Charset charSet, int bufferSize, boolean autoDetectCharset) throws IOException {
-		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		RandomAccessFile raf = new RandomAccessFile(fileName, "r");
 		this.configStart(raf, 0, charSet, bufferSize, autoDetectCharset, new RAFCloser(raf));
 	}
 	
 	public RBMappedFile(String fileName, Charset charSet, boolean autoDetectCharset) throws IOException {
-		RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+		RandomAccessFile raf = new RandomAccessFile(fileName, "r");
 		this.configStart(raf, 0, charSet, DEFAULT_BUFFER_SIZE, autoDetectCharset, new RAFCloser(raf));
 	}
 	

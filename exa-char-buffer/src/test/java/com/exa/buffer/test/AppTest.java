@@ -215,6 +215,12 @@ public class AppTest extends TestCase {
     	assertTrue("t".equals(rb.currentChar().toString()));
     }
     
+    public void testClose() throws IOException {
+    	CharReader cr = CharReader.forFile("./src/test/java/com/exa/buffer/test/test", false);
+    	
+    	cr.close();
+    }
+    
     /*public static void testCharset() throws IOException {
     	byte[] b = {(byte)0xFE, (byte)0xFF};
     	
