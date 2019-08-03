@@ -26,5 +26,5 @@ public class ActiveWord {
 	
 	public void nextToEndOfExpression(CharReader script) throws ManagedException {}
 	
-	public CharProperty<Boolean> nextUntilEnd(CharReader script) throws ParsingException { return new CharProperty<>(null, Boolean.FALSE);}
+	public CharProperty<Boolean> nextUntilEnd(CharReader script, StringBuilder bufferContent) throws ParsingException { return new CharProperty<>(null, Boolean.FALSE);}
 }

@@ -81,6 +81,41 @@ public class LexingRules {
 				sbBlank.append(currentChar);
 				continue;
 			}
+			
+			if(aw == AW_FAKE_WORD_SEPARATOR) {
+				StringBuilder wrd = new StringBuilder(currentChar.toString());
+				
+				boolean continueSeeking = false;
+				
+				while((currentChar = charReader.nextChar()) != null) {
+					wrd.append(currentChar);
+					
+					aw = getActiveWord(wrd.toString());
+					
+					if(aw == null) {
+						charReader.back(wrd.substring(1));
+						
+						return wrd.charAt(0);
+					}
+					
+					if(aw == AW_FAKE_WORD_SEPARATOR) continue;
+					
+					if(aw.isBlank()) {
+						CharProperty<Boolean> chPr;
+						do {
+							chPr = aw.nextUntilEnd(charReader, wrd);
+							if(chPr.getCharacter() == null) throw new ParsingException(String.format("Unexpected end of file after '%s'", aw.getKeyword()));
+							
+						} while(chPr.getProperty());
+						sbBlank.append(wrd);
+						continueSeeking = true;
+						break;
+					}
+				}
+				if(continueSeeking) continue;
+				
+				return wrd.charAt(0);
+			}
 			return currentChar;
 		}
 		
@@ -147,12 +182,12 @@ public class LexingRules {
 		return wrd.toString();
 	}
 	
-	private String nextWordStartingWithWS(CharReader script, String currentString) throws ParsingException {
-		StringBuilder wsSB = new StringBuilder(); wsSB.append(currentString);
+	private String nextWordStartingWithWS(CharReader script, ActiveWord ws/*, String currentString*/) throws ParsingException {
+		String currentString = ws.getKeyword();
+		StringBuilder wsSB = new StringBuilder(currentString); //wsSB.append(currentString);
 		
-		StringBuilder wrd = new StringBuilder(); wrd.append(currentString);
+		StringBuilder wrd = new StringBuilder(currentString); //wrd.append(currentString);
 		
-		//StringBuilder sbAB = new StringBuilder();
 		boolean processExit = false;
 		Character currentChar;
 		while((currentChar = script.nextChar()) != null) {
@@ -161,6 +196,20 @@ public class LexingRules {
 			ActiveWord aw = getActiveWord(wsSB.toString());
 			if(aw == null) {
 				script.back(wsSB.substring(wrd.length()));
+				
+				if(ws.isBlank()) {
+					StringBuilder sb = new StringBuilder(wsSB.substring(0, wsSB.length()-1));
+					CharProperty<Boolean> chPr;
+					do {
+						chPr = ws.nextUntilEnd(script, sb);
+						if(chPr.getCharacter() == null) throw new ParsingException(String.format("Unexpected end of file after '%s'", ws.getKeyword()));
+						
+						//sb.append(chPr.getCharacter());
+					} while(chPr.getProperty());
+					
+					return nextString(script);
+				}
+				
 				processExit = true;
 				break;
 			}
@@ -185,7 +234,7 @@ public class LexingRules {
 	}
 	
 	private String nextWordStartingWithFakeWS(CharReader script, Character currentChar) throws ParsingException {
-		StringBuilder wrd = new StringBuilder(); wrd.append(currentChar);
+		StringBuilder wrd = new StringBuilder(currentChar.toString()); //wrd.append(currentChar);
 		
 		while((currentChar = script.nextChar()) != null) {
 			wrd.append(currentChar);
@@ -198,7 +247,7 @@ public class LexingRules {
 			if(aw.isWordSeparator()) {
 				if(aw == AW_FAKE_WORD_SEPARATOR) continue;
 				
-				return nextWordStartingWithWS(script, wrd.toString());
+				return nextWordStartingWithWS(script, aw);
 			}
 			
 			return wrd.toString() + nextWordStartingWithNonWS(script);
@@ -223,22 +272,18 @@ public class LexingRules {
 			
 			CharProperty<Boolean> chPr;
 			do {
-				chPr = aw.nextUntilEnd(script);
+				chPr = aw.nextUntilEnd(script, sb);
 				if(chPr.getCharacter() == null) break;
 				
-				sb.append(chPr.getCharacter());
+				//sb.append(chPr.getCharacter());
 			} while(chPr.getProperty());
-			
-			
-			//aw.nextToEndOfWord(script);
-			//return lastWrd = currentChar + buffer.release().toString(); //script.releaseCharReading(db);
 			
 			return lastWrd = sb.toString();
 		}
 		
 		if(aw.isWordSeparator()) {
-			if(aw == AW_FAKE_WORD_SEPARATOR) return nextWordStartingWithFakeWS(script, currentChar);
-			return lastWrd = nextWordStartingWithWS(script, currentChar.toString());
+			if(aw == AW_FAKE_WORD_SEPARATOR) return lastWrd = nextWordStartingWithFakeWS(script, currentChar);
+			return lastWrd = nextWordStartingWithWS(script, aw /*currentChar.toString()*/);
 		}
 		
 		return lastWrd = wrd.toString();

@@ -10,6 +10,9 @@ import com.exa.buffer.RBMappedFile;
 import com.exa.buffer.RBRAM;
 import com.exa.buffer.ReadingBuffer;
 import com.exa.chars.EscapeCharMan;
+import com.exa.lexing.CommentWord;
+import com.exa.lexing.LexingRules;
+import com.exa.lexing.ParsingException;
 import com.exa.utils.ManagedException;
 
 import junit.framework.Test;
@@ -220,6 +223,74 @@ public class AppTest extends TestCase {
     	
     	cr.close();
     }
+    
+    public void testComment() throws IOException, ParsingException {
+    	CharReader cr = CharReader.forFile("./src/test/java/com/exa/buffer/test/test-comment", false);
+    	
+    	LexingRules lr = new LexingRules(" \n");
+    	
+    	CommentWord cmtWrd = new CommentWord("/*", lr, sb -> "*/".equals(sb.substring(sb.length()-2)) );
+    	
+    	lr.addWordSeparator(cmtWrd);
+    	
+    	String str = lr.nextString(cr);
+    	
+    	assertTrue("ab".equals(str));
+    	
+    	str = lr.nextString(cr);
+    	
+    	assertTrue("fg".equals(str));
+    	
+    	cr.close();
+    }
+    
+    public void testComment2() throws IOException, ParsingException {
+    	CharReader cr = CharReader.forFile("./src/test/java/com/exa/buffer/test/test-comment2", false);
+    	
+    	LexingRules lr = new LexingRules(" \n");
+    	
+    	CommentWord cmtWrd = new CommentWord("/*", lr, sb -> "*/".equals(sb.substring(sb.length()-2)) );
+    	
+    	lr.addWordSeparator(cmtWrd);
+    	
+    	String str = lr.nextString(cr);
+    	
+    	assertTrue("de".equals(str));
+    	
+    	cr.close();
+    }
+    
+    public void testComment3() throws IOException, ParsingException {
+    	CharReader cr = CharReader.forFile("./src/test/java/com/exa/buffer/test/test-comment3", false);
+    	
+    	LexingRules lr = new LexingRules(" \n");
+    	
+    	CommentWord cmtWrd = new CommentWord("/*", lr, sb -> "*/".equals(sb.substring(sb.length()-2)) );
+    	
+    	lr.addWordSeparator(cmtWrd);
+    	
+    	lr.addWordSeparator(new CommentWord("//", lr, sb -> {
+			if(sb.length() == 2) return true;
+			char ch = sb.charAt(sb.length()-1);
+			
+			return ch == '\n' || ch == '\r';
+		}));
+    	
+    	String str = lr.nextString(cr);
+    	
+    	assertTrue("ab".equals(str));
+    	
+    	str = lr.nextString(cr);
+    	
+    	assertTrue("cd".equals(str));
+    	
+    	str = lr.nextString(cr);
+    	
+    	assertTrue("ef".equals(str));
+    	
+    	cr.close();
+    }
+    
     
     /*public static void testCharset() throws IOException {
     	byte[] b = {(byte)0xFE, (byte)0xFF};
