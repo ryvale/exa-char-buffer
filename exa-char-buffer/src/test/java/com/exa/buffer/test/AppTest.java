@@ -52,9 +52,13 @@ public class AppTest extends TestCase {
     	File file = new File(".");
     	System.out.println(file.getAbsolutePath());
     	
+    	rb.close();
+    	
     	rb = new RBMappedFile("./src/test/java/com/exa/buffer/test/test", true);
     	
     	assertTrue("test".equals(rb.substring(0, 4)));
+    	
+    	rb.close();
     	
     	rb = new RBMappedFile("./src/test/java/com/exa/buffer/test/test-with-escape", true);
     	
@@ -64,9 +68,11 @@ public class AppTest extends TestCase {
     	assertTrue("test\n\r\n".equals(rb.substring(0, 8, EscapeCharMan.STANDARD)));
     	assertTrue("test\n\r\nw".equals(rb.substring(0, 9, EscapeCharMan.STANDARD)));
     	assertTrue("test\n\r\nwith ".equals(rb.substring(0, 13, EscapeCharMan.STANDARD)));
+    	
+    	rb.close();
     }
     
-    public void testCharReaderBuffer() throws ManagedException {
+    public void testCharReaderBuffer() throws ManagedException, IOException {
     	CharReader charReader = new CharReader("test0 test1");
     	
     	ClientBuffer bf = charReader.listen();
@@ -74,6 +80,8 @@ public class AppTest extends TestCase {
     	bf.release();
     	//System.out.println(bf);
     	assertTrue("t".equals(bf.toString()));
+    	
+    	charReader.close();
     	
     	charReader = new CharReader("test0 test1");
     	charReader.nextChar();
@@ -83,11 +91,15 @@ public class AppTest extends TestCase {
     	//System.out.println(bf);
     	assertTrue("e".equals(bf.toString()));
     	
+    	charReader.close();
+    	
     	charReader = new CharReader("test0 test1");
     	bf = charReader.listen();
     	bf.release();
     	//System.out.println(bf);
     	assertTrue("".equals(bf.toString()));
+    	
+    	charReader.close();
     	
     	charReader = new CharReader("test0 test1");
     	charReader.nextChar();
@@ -98,6 +110,8 @@ public class AppTest extends TestCase {
     	//System.out.println(bf);
     	assertTrue("es".equals(bf.toString()));
     	
+    	charReader.close();
+    	
     	charReader = new CharReader("test0 test1");
     	charReader.nextChar();
     	bf = charReader.listen();
@@ -106,12 +120,16 @@ public class AppTest extends TestCase {
     	//System.out.println(bf);
     	assertTrue("est0 test1".equals(bf.toString()));
     	
+    	charReader.close();
+    	
     	charReader = new CharReader("test0 test1");
     	bf = charReader.listen();
     	while(charReader.nextChar() != null);
     	bf.release();
     	//System.out.println(bf);
     	assertTrue("test0 test1".equals(bf.toString()));
+    	
+    	charReader.close();
     	
     	charReader = new CharReader("test0 test1");
     	bf = charReader.listen();
@@ -120,6 +138,8 @@ public class AppTest extends TestCase {
     	bf.release();
     	//System.out.println(bf);
     	assertTrue("test0 test".equals(bf.toString()));
+    	
+    	charReader.close();
     	
     	charReader = new CharReader("test0 test1");
     	bf = charReader.listen();
@@ -139,6 +159,7 @@ public class AppTest extends TestCase {
     	assertTrue("test0 test1".equals(bf.toString()));
     	assertTrue("test0 test1".equals(bf1.toString()));
     	
+    	charReader.close();
     	
     	charReader = new CharReader("test0 test1");
     	bf = charReader.listen();
@@ -150,6 +171,8 @@ public class AppTest extends TestCase {
     	//System.out.println(bf);	System.out.println(bf1);
     	assertTrue("test0 test1".equals(bf.toString()));
     	assertTrue("est0 test1".equals(bf1.toString()));
+    	
+    	charReader.close();
     	
     	charReader = new CharReader("test0 test1");
     	bf = charReader.listen();
@@ -171,6 +194,8 @@ public class AppTest extends TestCase {
     	assertTrue("".equals(bf.toString()));
     	assertTrue("test0 test1".equals(bf1.toString()));
     	
+    	charReader.close();
+    	
     	charReader = new CharReader("test0 test1");
     	bf = charReader.listen();
     	charReader.nextChar();
@@ -178,6 +203,8 @@ public class AppTest extends TestCase {
     	bf.rewind();
     	assertTrue("".equals(bf.toString()));
     	bf.release();
+    	
+    	charReader.close();
     	
     	charReader = new CharReader("test0 test1");
     	bf = charReader.listen();
